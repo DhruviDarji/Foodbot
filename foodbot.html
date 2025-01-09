@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Food Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 10px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        #chat-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 400px;
+            max-width: 100%;
+        }
+        #chat-history {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            background-color: #fafafa;
+            border-radius: 4px;
+            min-width: 30%;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+            max-width: 80%;
+        }
+        .user {
+            color: white;
+            background-color: #007bff;
+            align-self: flex-end;
+        }
+        .bot {
+            color: white;
+            background-color: #28a745;
+            align-self: flex-start;
+            word-spacing: 5px;
+        }
+        #chat-form {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #prompt {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        /* Additional styling */
+        #chat-history::-webkit-scrollbar {
+            width: 8px;
+        }
+        #chat-history::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+        #chat-history::-webkit-scrollbar-thumb:hover {
+            background-color: #aaa;
+        }
+        .message.user {
+            background-color: #658cb6;
+            color: white;
+            align-self: flex-end;
+        }
+        .message.bot {
+            background-color: #64a874;
+            color: white;
+            align-self: flex-start;
+        }
+        /* New styling */
+        .message.user::before {
+            content: "User: ";
+            font-weight: bold;
+        }
+        .message.bot::before {
+            content: "Bot: ";
+            font-weight: bold;
+        }
+        #chat-container {
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+            opacity: 0;
+            }
+            to {
+            opacity: 1;
+            }
+        }
+        </style>
+</head>
+<body>
+    <h1>Smart Food bot</h1>
+    <div id="chat-history"></div>
+    <form id="chat-form">
+        <input type="text" id="prompt" placeholder="Enter your message" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            const chatHistory = document.getElementById('chat-history');
+
+            // Append user message to chat history
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.innerText = 'User: ' + prompt;
+            chatHistory.appendChild(userMessage);
+
+            // Scroll to the bottom of the chat history
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Check if the user wants to end the chat
+            if (prompt.toLowerCase() === 'bye' || prompt.toLowerCase() === 'exit') {
+                const endMessage = document.createElement('div');
+                endMessage.className = 'message bot';
+                endMessage.innerText = 'Bot: Goodbye!';
+                chatHistory.appendChild(endMessage);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Append bot response to chat history with delay
+                const botMessage = document.createElement('div');
+                botMessage.className = 'message bot';
+                chatHistory.appendChild(botMessage);
+
+                const words = data.response.split(' ');
+                let delay = 0;
+                words.forEach(word => {
+                    setTimeout(() => {
+                        botMessage.innerText +=" "+ word;
+                        chatHistory.scrollTop = chatHistory.scrollHeight;
+                    }, delay);
+                    delay += 30; // 30ms delay for each word
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'message bot';
+                errorMessage.innerText = 'Bot: Error: ' + error.message;
+                chatHistory.appendChild(errorMessage);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+
+            // Clear the input field
+            document.getElementById('prompt').value = '';
+        });
+    </script>
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Food Bot</title>
+    <style>
+        #chat-history {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .user {
+            color: blue;
+        }
+        .bot {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat with Food Bot</h1>
+    <div id="chat-history"></div>
+    <form id="chat-form">
+        <input type="text" id="prompt" placeholder="Enter your message" required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const prompt = document.getElementById('prompt').value;
+            const chatHistory = document.getElementById('chat-history');
+
+            // Append user message to chat history
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user';
+            userMessage.innerText = 'User: ' + prompt;
+            chatHistory.appendChild(userMessage);
+
+            // Scroll to the bottom of the chat history
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Check if the user wants to end the chat
+            if (prompt.toLowerCase() === 'bye' || prompt.toLowerCase() === 'exit') {
+            const endMessage = document.createElement('div');
+            endMessage.className = 'message bot';
+            endMessage.innerText = 'Bot: Goodbye!';
+            chatHistory.appendChild(endMessage);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return;
+            }
+
+            try {
+            console.log('Sending request to server with prompt:', prompt);
+            const response = await fetch('http://127.0.0.1:5000/chat', {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+            });
+
+            console.log('Received response from server:', response);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            // Append bot response to chat history
+            const botMessage = document.createElement('div');
+            botMessage.className = 'message bot';
+            botMessage.innerText = 'Bot: ' + data.response;
+            chatHistory.appendChild(botMessage);
+
+            // Scroll to the bottom of the chat history
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            } catch (error) {
+            console.error('Error:', error);
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'message bot';
+            errorMessage.innerText = 'Bot: Error: ' + error.message;
+            chatHistory.appendChild(errorMessage);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+
+            // Clear the input field
+            document.getElementById('prompt').value = '';
+        });
+        </script>
+</body>
+</html> -->
+
